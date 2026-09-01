@@ -311,14 +311,26 @@
             color: white;
         }
 
+        .btn-success:hover {
+            transform: translateY(-2px);
+        }
+
         .btn-warning {
             background: var(--warning);
             color: white;
         }
 
+        .btn-warning:hover {
+            transform: translateY(-2px);
+        }
+
         .btn-danger {
             background: var(--danger);
             color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
         }
 
         .btn-sm {
@@ -524,6 +536,83 @@
         .inventory-item .item-actions {
             display: flex;
             gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .inventory-item .price-edit {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .inventory-item .price-edit input {
+            width: 100px;
+            padding: 6px 10px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .inventory-item .price-edit input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Payment Settlement Styles */
+        .debt-item {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .debt-item .debt-info {
+            flex: 1;
+        }
+
+        .debt-item .debt-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .debt-item .debt-actions input {
+            width: 120px;
+            padding: 8px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .debt-item .debt-actions input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .settlement-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .settlement-item {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         @media (max-width: 480px) {
@@ -545,6 +634,17 @@
             .customer-card .customer-actions {
                 justify-content: flex-end;
             }
+            .debt-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .debt-item .debt-actions {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+            .inventory-item .price-edit input {
+                width: 80px;
+            }
         }
     </style>
 </head>
@@ -564,6 +664,7 @@
         <button class="nav-tab" onclick="showSection('customers')">👥 کڕیارەکان</button>
         <button class="nav-tab" onclick="showSection('inventory')">📦 مخزن</button>
         <button class="nav-tab" onclick="showSection('purchases')">📥 کڕین</button>
+        <button class="nav-tab" onclick="showSection('settlements')">💰 واسڵ</button>
     </nav>
 
     <!-- Sales Section -->
@@ -638,6 +739,18 @@
         </div>
     </section>
 
+    <!-- Settlements Section -->
+    <section id="settlements" class="section">
+        <div class="card">
+            <div class="card-title">💰 واسڵکردنی پارە</div>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="debtSearch" placeholder="گەڕان بەدوای ناوی کەس..." oninput="renderDebtList(this.value)">
+            </div>
+            <div id="debtList"></div>
+        </div>
+    </section>
+
     <!-- Customer Detail Modal -->
     <div id="customerDetailModal" class="modal">
         <div class="modal-content">
@@ -654,11 +767,11 @@
         let customers = JSON.parse(localStorage.getItem('customers')) || [];
         let products = JSON.parse(localStorage.getItem('products')) || [];
         let purchases = JSON.parse(localStorage.getItem('purchases')) || [];
+        let settlements = JSON.parse(localStorage.getItem('settlements')) || [];
         let selectedCustomer = null;
         let selectedProducts = [];
         let selectedPurchaseProduct = null;
         let purchaseQuantity = 1;
-        let productQuantities = {};
 
         // Default products if empty
         if (products.length === 0) {
@@ -686,6 +799,7 @@
             renderCustomers();
             renderPurchaseProducts();
             renderInventory();
+            renderDebtList();
         }
 
         // Theme Toggle
@@ -721,10 +835,18 @@
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(section).classList.add('active');
-            event.target.classList.add('active');
+            // Find the clicked tab and add active class
+            document.querySelectorAll('.nav-tab').forEach(t => {
+                if (t.textContent.includes('🛒 فرۆشتن') && section === 'sales') t.classList.add('active');
+                if (t.textContent.includes('👥 کڕیارەکان') && section === 'customers') t.classList.add('active');
+                if (t.textContent.includes('📦 مخزن') && section === 'inventory') t.classList.add('active');
+                if (t.textContent.includes('📥 کڕین') && section === 'purchases') t.classList.add('active');
+                if (t.textContent.includes('💰 واسڵ') && section === 'settlements') t.classList.add('active');
+            });
             if (section === 'customers') renderCustomers();
             if (section === 'inventory') renderInventory();
             if (section === 'purchases') renderPurchaseProducts();
+            if (section === 'settlements') renderDebtList();
         }
 
         // Product Rendering for Sales
@@ -879,6 +1001,7 @@
             document.getElementById('selectedCustomer').innerHTML = '';
             document.getElementById('productSearch').value = '';
             renderProducts();
+            renderDebtList();
 
             alert('✅ فرۆشتن بە سەرکەوتوویی تۆمارکرا!');
         }
@@ -905,6 +1028,7 @@
             localStorage.setItem('customers', JSON.stringify(customers));
             nameInput.value = '';
             renderCustomers();
+            renderDebtList();
             alert('✅ کڕیار زیادکرا!');
         }
 
@@ -913,6 +1037,7 @@
             customers = customers.filter(c => c.id !== id);
             localStorage.setItem('customers', JSON.stringify(customers));
             renderCustomers();
+            renderDebtList();
         }
 
         function renderCustomers(filter = '') {
@@ -1000,7 +1125,11 @@
                         </div>
                         <div>
                             <div><strong>${p.name}</strong></div>
-                            <div style="color:var(--gold);">${p.price.toLocaleString()} دینار</div>
+                            <div class="price-edit">
+                                <span style="color:var(--gold);">نرخ:</span>
+                                <input type="number" value="${p.price}" min="0" onchange="updateProductPrice(${p.id}, this.value)">
+                                <span>دینار</span>
+                            </div>
                         </div>
                     </div>
                     <div class="item-actions">
@@ -1008,6 +1137,23 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function updateProductPrice(productId, newPrice) {
+            const price = parseInt(newPrice);
+            if (isNaN(price) || price < 0) {
+                alert('تکایە نرخێکی دروست بنووسە!');
+                renderInventory();
+                return;
+            }
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                product.price = price;
+                localStorage.setItem('products', JSON.stringify(products));
+                renderProducts();
+                renderInventory();
+                renderPurchaseProducts();
+            }
         }
 
         function addProduct() {
@@ -1162,6 +1308,137 @@
             document.getElementById('purchaseSearch').value = '';
             renderPurchaseProducts();
             alert('✅ کڕین بە سەرکەوتوویی تۆمارکرا!');
+        }
+
+        // ============ PAYMENT SETTLEMENT (واسڵکردنی پارە) ============
+        function renderDebtList(filter = '') {
+            const container = document.getElementById('debtList');
+            const debtCustomers = customers.filter(c => c.debt > 0);
+            const filtered = filter ? debtCustomers.filter(c => c.name.includes(filter)) : debtCustomers;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="card" style="text-align: center; color: var(--text-secondary);">
+                        ${customers.some(c => c.debt > 0) ? 'هیچ کەسێک نەدۆزرایەوە' : 'هیچ قەرزێک نییە! 🎉'}
+                    </div>
+                `;
+                return;
+            }
+
+            // Get settlement history for each customer
+            container.innerHTML = filtered.map(c => {
+                const customerSettlements = settlements.filter(s => s.customerId === c.id);
+                return `
+                    <div class="debt-item">
+                        <div class="debt-info">
+                            <strong style="font-size: 1.1rem;">👤 ${c.name}</strong>
+                            <div style="color: var(--danger); font-size: 1.1rem; margin-top: 4px;">
+                                کۆی قەرز: ${c.debt.toLocaleString()} دینار
+                            </div>
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 2px;">
+                                ${customerSettlements.length} جار واسڵ کراوە
+                            </div>
+                        </div>
+                        <div class="debt-actions">
+                            <input type="number" id="settlementAmount_${c.id}" placeholder="بڕی پارە..." min="1" max="${c.debt}">
+                            <button class="btn btn-success btn-sm" onclick="processSettlement(${c.id})">
+                                💰 واسڵ
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="showSettlementHistory(${c.id})">
+                                📋 مێژوو
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function processSettlement(customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            if (!customer) return;
+
+            const amountInput = document.getElementById(`settlementAmount_${customerId}`);
+            const amount = parseInt(amountInput.value);
+
+            if (!amount || amount <= 0) {
+                alert('تکایە بڕی پارەی دروست بنووسە!');
+                return;
+            }
+
+            if (amount > customer.debt) {
+                alert(`قەرزی ئەم کەسە ${customer.debt.toLocaleString()} دینارە! ناتوانیت زیاتر لەوە واسڵ بکەیت.`);
+                return;
+            }
+
+            // Record settlement
+            const settlement = {
+                id: Date.now(),
+                customerId: customer.id,
+                customerName: customer.name,
+                amount: amount,
+                date: new Date().toLocaleString('ckb'),
+                remainingDebt: customer.debt - amount
+            };
+
+            // Update customer debt
+            customer.debt -= amount;
+            localStorage.setItem('customers', JSON.stringify(customers));
+
+            // Save settlement
+            settlements.push(settlement);
+            localStorage.setItem('settlements', JSON.stringify(settlements));
+
+            amountInput.value = '';
+            renderDebtList(document.getElementById('debtSearch').value);
+            renderCustomers();
+
+            alert(`✅ واسڵ بە سەرکەوتوویی تۆمارکرا! 
+        بڕی پارە: ${amount.toLocaleString()} دینار
+        قەرزی ماوە: ${customer.debt.toLocaleString()} دینار`);
+        }
+
+        function showSettlementHistory(customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            if (!customer) return;
+
+            const customerSettlements = settlements.filter(s => s.customerId === customerId);
+
+            document.getElementById('modalCustomerName').textContent = `📋 مێژووی واسڵ - ${customer.name}`;
+            const content = document.getElementById('customerDetailContent');
+
+            if (customerSettlements.length === 0) {
+                content.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">هیچ واسڵێک بۆ ئەم کەسە تۆمار نەکراوە</p>';
+            } else {
+                content.innerHTML = `
+                    <div class="card" style="margin-bottom: 16px;">
+                        <strong>کۆی قەرزی ئێستا: </strong>
+                        <span style="color: ${customer.debt > 0 ? 'var(--danger)' : 'var(--success)'}; font-size: 1.2rem;">
+                            ${customer.debt.toLocaleString()} دینار
+                        </span>
+                    </div>
+                    <div class="settlement-history">
+                        ${customerSettlements.map(s => `
+                            <div class="settlement-item">
+                                <div>
+                                    <div style="font-weight: bold;">💰 ${s.amount.toLocaleString()} دینار</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-secondary);">${s.date}</div>
+                                </div>
+                                <div style="color: var(--text-secondary); font-size: 0.85rem;">
+                                    قەرزی ماوە: ${s.remainingDebt.toLocaleString()} دینار
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            document.getElementById('customerDetailModal').classList.add('active');
+        }
+
+        // Override closeModal to also clear the title if needed
+        const originalCloseModal = closeModal;
+        closeModal = function() {
+            document.getElementById('customerDetailModal').classList.remove('active');
         }
 
         // Initialize app
