@@ -14,7 +14,7 @@
             --accent: #c0392b;
             --accent-light: #e74c3c;
             --border: #d4c5b5;
-            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             --success: #27ae60;
             --warning: #f39c12;
             --danger: #e74c3c;
@@ -32,7 +32,7 @@
             --accent: #e74c3c;
             --accent-light: #ff6b6b;
             --border: #4a4a4a;
-            --shadow: 0 4px 12px rgba(0,0,0,0.3);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             --success: #2ecc71;
             --warning: #f1c40f;
             --danger: #ff6b6b;
@@ -54,7 +54,6 @@
             padding-bottom: 80px;
         }
 
-        /* Header */
         .app-header {
             background: var(--bg-secondary);
             padding: 20px;
@@ -76,6 +75,7 @@
             display: flex;
             justify-content: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .theme-toggle {
@@ -97,7 +97,6 @@
             transform: translateY(-2px);
         }
 
-        /* Navigation Tabs */
         .nav-tabs {
             display: flex;
             gap: 10px;
@@ -132,7 +131,6 @@
             border-color: var(--accent);
         }
 
-        /* Sections */
         .section {
             display: none;
             padding: 20px;
@@ -144,11 +142,16 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        /* Cards */
         .card {
             background: var(--bg-card);
             border-radius: var(--radius);
@@ -160,7 +163,7 @@
         }
 
         .card:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
 
         .card-title {
@@ -170,7 +173,6 @@
             color: var(--accent);
         }
 
-        /* Search */
         .search-container {
             position: relative;
             margin-bottom: 16px;
@@ -202,7 +204,6 @@
             font-size: 1.2rem;
         }
 
-        /* Product List */
         .product-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -217,6 +218,7 @@
             cursor: pointer;
             transition: var(--transition);
             text-align: center;
+            position: relative;
         }
 
         .product-item:hover {
@@ -230,7 +232,7 @@
             background: rgba(39, 174, 96, 0.1);
         }
 
-        .product-image {
+        .product-item .product-image {
             width: 60px;
             height: 60px;
             margin: 0 auto 8px;
@@ -238,6 +240,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .product-item .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .product-name {
@@ -252,7 +262,6 @@
             font-size: 1.1rem;
         }
 
-        /* Customer Search */
         .customer-suggestions {
             margin-top: 8px;
             border-radius: var(--radius);
@@ -274,7 +283,6 @@
             background: rgba(192, 57, 43, 0.1);
         }
 
-        /* Buttons */
         .btn {
             padding: 12px 24px;
             border: none;
@@ -318,7 +326,17 @@
             font-size: 0.9rem;
         }
 
-        /* Modal */
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -326,7 +344,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -362,7 +380,6 @@
             color: var(--text-primary);
         }
 
-        /* Invoice */
         .invoice-item {
             background: var(--bg-card);
             border-radius: 12px;
@@ -377,7 +394,6 @@
             margin-bottom: 4px;
         }
 
-        /* Customer Card */
         .customer-card {
             background: var(--bg-card);
             border-radius: var(--radius);
@@ -386,6 +402,9 @@
             cursor: pointer;
             transition: var(--transition);
             border: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .customer-card:hover {
@@ -393,7 +412,120 @@
             transform: translateY(-2px);
         }
 
-        /* Responsive */
+        .customer-card .customer-info {
+            flex: 1;
+        }
+
+        .customer-card .customer-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quantity-control button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quantity-control button:hover {
+            border-color: var(--accent);
+        }
+
+        .quantity-control span {
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .product-management {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .product-management input {
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .product-management input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .file-upload-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .product-image-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid var(--border);
+        }
+
+        .inventory-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .inventory-item .item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .inventory-item .item-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .inventory-item .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
         @media (max-width: 480px) {
             .product-list {
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -405,11 +537,18 @@
             .app-header h1 {
                 font-size: 1.4rem;
             }
+            .customer-card {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .customer-card .customer-actions {
+                justify-content: flex-end;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header class="app-header">
         <h1>🍵 چایخانەی جوان</h1>
         <div class="header-actions">
@@ -420,17 +559,11 @@
         </div>
     </header>
 
-    <!-- Navigation -->
     <nav class="nav-tabs">
-        <button class="nav-tab active" onclick="showSection('sales')">
-            🛒 فرۆشتن
-        </button>
-        <button class="nav-tab" onclick="showSection('customers')">
-            👥 کڕیارەکان
-        </button>
-        <button class="nav-tab" onclick="showSection('purchases')">
-            📦 کڕین
-        </button>
+        <button class="nav-tab active" onclick="showSection('sales')">🛒 فرۆشتن</button>
+        <button class="nav-tab" onclick="showSection('customers')">👥 کڕیارەکان</button>
+        <button class="nav-tab" onclick="showSection('inventory')">📦 مخزن</button>
+        <button class="nav-tab" onclick="showSection('purchases')">📥 کڕین</button>
     </nav>
 
     <!-- Sales Section -->
@@ -449,13 +582,9 @@
             </div>
             <div id="productList" class="product-list"></div>
             <div id="selectedProducts" style="margin-top: 16px;"></div>
-            <div style="margin-top: 16px;">
-                <button class="btn btn-success" onclick="processSale('paid')">
-                    💰 پارە وەرگیرا
-                </button>
-                <button class="btn btn-warning" onclick="processSale('credit')">
-                    📝 قەرز
-                </button>
+            <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-success" onclick="processSale('paid')">💰 پارە وەرگیرا</button>
+                <button class="btn btn-warning" onclick="processSale('credit')">📝 قەرز</button>
             </div>
         </div>
     </section>
@@ -464,6 +593,10 @@
     <section id="customers" class="section">
         <div class="card">
             <div class="card-title">👥 کڕیارەکان</div>
+            <div style="display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+                <input type="text" id="newCustomerName" placeholder="ناوی کڕیاری نوێ..." style="flex:1; min-width:150px; padding:10px 14px; border:2px solid var(--border); border-radius:8px; background:var(--bg-secondary); color:var(--text-primary);">
+                <button class="btn btn-success" onclick="addCustomer()">➕ زیادکردن</button>
+            </div>
             <div class="search-container">
                 <span class="search-icon">🔍</span>
                 <input type="text" class="search-input" placeholder="گەڕان بەدوای کڕیار..." oninput="filterCustomers(this.value)">
@@ -472,10 +605,27 @@
         </div>
     </section>
 
+    <!-- Inventory Section -->
+    <section id="inventory" class="section">
+        <div class="card">
+            <div class="card-title">📦 مخزن - بەڕێوەبردنی کاڵاکان</div>
+            <div class="product-management">
+                <input type="text" id="newProductName" placeholder="ناوی کاڵا...">
+                <input type="number" id="newProductPrice" placeholder="نرخی فرۆشتن...">
+                <div class="file-upload-wrapper">
+                    <button class="btn btn-primary" style="pointer-events: none;">📷 وێنه</button>
+                    <input type="file" id="newProductImage" accept="image/*">
+                </div>
+                <button class="btn btn-success" onclick="addProduct()">➕ زیادکردن</button>
+            </div>
+            <div id="inventoryList"></div>
+        </div>
+    </section>
+
     <!-- Purchases Section -->
     <section id="purchases" class="section">
         <div class="card">
-            <div class="card-title">📦 کڕینی کاڵا</div>
+            <div class="card-title">📥 کڕینی کاڵا</div>
             <div class="search-container">
                 <span class="search-icon">🔍</span>
                 <input type="text" class="search-input" id="purchaseSearch" placeholder="گەڕان بەدوای کاڵا..." oninput="filterPurchaseProducts(this.value)">
@@ -483,9 +633,7 @@
             <div id="purchaseProductList" class="product-list"></div>
             <div id="purchaseDetails" style="margin-top: 16px;"></div>
             <div style="margin-top: 16px;">
-                <button class="btn btn-primary" onclick="processPurchase()">
-                    ✅ تۆمارکردنی کڕین
-                </button>
+                <button class="btn btn-primary" onclick="processPurchase()">✅ تۆمارکردنی کڕین</button>
             </div>
         </div>
     </section>
@@ -504,25 +652,32 @@
     <script>
         // Data Storage
         let customers = JSON.parse(localStorage.getItem('customers')) || [];
-        let products = [
-            { id: 1, name: 'چای', price: 1000, icon: '🍵' },
-            { id: 2, name: 'قاوە', price: 2000, icon: '☕' },
-            { id: 3, name: 'شایی', price: 1500, icon: '🫖' },
-            { id: 4, name: 'کەباب', price: 5000, icon: '🍢' },
-            { id: 5, name: 'بەفرەو', price: 3000, icon: '🍨' },
-            { id: 6, name: 'کێک', price: 2500, icon: '🍰' },
-            { id: 7, name: 'پیچا', price: 4000, icon: '🍕' },
-            { id: 8, name: 'نوقڵ', price: 1500, icon: '🍬' },
-            { id: 9, name: 'شیرینی', price: 2000, icon: '🍪' },
-            { id: 10, name: 'ئاو', price: 500, icon: '💧' },
-            { id: 11, name: 'ناردن', price: 3000, icon: '🥤' },
-            { id: 12, name: 'چای سەوز', price: 1200, icon: '🌿' }
-        ];
+        let products = JSON.parse(localStorage.getItem('products')) || [];
         let purchases = JSON.parse(localStorage.getItem('purchases')) || [];
         let selectedCustomer = null;
         let selectedProducts = [];
         let selectedPurchaseProduct = null;
         let purchaseQuantity = 1;
+        let productQuantities = {};
+
+        // Default products if empty
+        if (products.length === 0) {
+            products = [
+                { id: 1, name: 'چای', price: 1000, icon: '🍵', image: '' },
+                { id: 2, name: 'قاوە', price: 2000, icon: '☕', image: '' },
+                { id: 3, name: 'شایی', price: 1500, icon: '🫖', image: '' },
+                { id: 4, name: 'کەباب', price: 5000, icon: '🍢', image: '' },
+                { id: 5, name: 'بەفرەو', price: 3000, icon: '🍨', image: '' },
+                { id: 6, name: 'کێک', price: 2500, icon: '🍰', image: '' },
+                { id: 7, name: 'پیچا', price: 4000, icon: '🍕', image: '' },
+                { id: 8, name: 'نوقڵ', price: 1500, icon: '🍬', image: '' },
+                { id: 9, name: 'شیرینی', price: 2000, icon: '🍪', image: '' },
+                { id: 10, name: 'ئاو', price: 500, icon: '💧', image: '' },
+                { id: 11, name: 'ناردن', price: 3000, icon: '🥤', image: '' },
+                { id: 12, name: 'چای سەوز', price: 1200, icon: '🌿', image: '' }
+            ];
+            localStorage.setItem('products', JSON.stringify(products));
+        }
 
         // Initialize
         function init() {
@@ -530,6 +685,7 @@
             renderProducts();
             renderCustomers();
             renderPurchaseProducts();
+            renderInventory();
         }
 
         // Theme Toggle
@@ -567,20 +723,25 @@
             document.getElementById(section).classList.add('active');
             event.target.classList.add('active');
             if (section === 'customers') renderCustomers();
+            if (section === 'inventory') renderInventory();
             if (section === 'purchases') renderPurchaseProducts();
         }
 
-        // Product Rendering
+        // Product Rendering for Sales
         function renderProducts(filter = '') {
             const container = document.getElementById('productList');
             const filtered = products.filter(p => p.name.includes(filter));
-            container.innerHTML = filtered.map(p => `
-                <div class="product-item ${selectedProducts.includes(p.id) ? 'selected' : ''}" onclick="toggleProduct(${p.id})">
-                    <div class="product-image">${p.icon}</div>
+            container.innerHTML = filtered.map(p => {
+                const isSelected = selectedProducts.some(item => item.productId === p.id);
+                return `
+                <div class="product-item ${isSelected ? 'selected' : ''}" onclick="toggleProduct(${p.id})">
+                    <div class="product-image">
+                        ${p.image ? `<img src="${p.image}" alt="${p.name}">` : p.icon}
+                    </div>
                     <div class="product-name">${p.name}</div>
                     <div class="product-price">${p.price.toLocaleString()} دینار</div>
                 </div>
-            `).join('');
+            `}).join('');
             updateSelectedProductsDisplay();
         }
 
@@ -589,13 +750,24 @@
         }
 
         function toggleProduct(productId) {
-            const index = selectedProducts.indexOf(productId);
+            const index = selectedProducts.findIndex(item => item.productId === productId);
             if (index > -1) {
                 selectedProducts.splice(index, 1);
             } else {
-                selectedProducts.push(productId);
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    selectedProducts.push({ productId: product.id, quantity: 1 });
+                }
             }
             renderProducts(document.getElementById('productSearch').value);
+        }
+
+        function updateProductQuantity(productId, change) {
+            const item = selectedProducts.find(p => p.productId === productId);
+            if (item) {
+                item.quantity = Math.max(1, item.quantity + change);
+                updateSelectedProductsDisplay();
+            }
         }
 
         function updateSelectedProductsDisplay() {
@@ -604,19 +776,25 @@
                 container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">هیچ کاڵایەک هەڵنەبژێردراوە</p>';
                 return;
             }
-            const total = selectedProducts.reduce((sum, id) => {
-                const product = products.find(p => p.id === id);
-                return sum + (product ? product.price : 0);
+            const total = selectedProducts.reduce((sum, item) => {
+                const product = products.find(p => p.id === item.productId);
+                return sum + (product ? product.price * item.quantity : 0);
             }, 0);
             container.innerHTML = `
                 <div class="card">
                     <strong>کاڵا هەڵبژێردراوەکان:</strong>
-                    <div style="margin-top: 8px;">
-                        ${selectedProducts.map(id => {
-                            const product = products.find(p => p.id === id);
-                            return `<span style="display: inline-block; background: var(--accent); color: white; padding: 4px 8px; border-radius: 20px; margin: 2px; font-size: 0.9rem;">${product.name} - ${product.price.toLocaleString()}</span>`;
-                        }).join('')}
-                    </div>
+                    ${selectedProducts.map(item => {
+                        const product = products.find(p => p.id === item.productId);
+                        return `<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border);">
+                            <span>${product ? `${product.icon} ${product.name}` : ''}</span>
+                            <div class="quantity-control" style="margin:0;">
+                                <button onclick="updateProductQuantity(${item.productId}, -1)">−</button>
+                                <span>${item.quantity}</span>
+                                <button onclick="updateProductQuantity(${item.productId}, 1)">+</button>
+                            </div>
+                            <span style="color:var(--gold);">${(product ? product.price * item.quantity : 0).toLocaleString()} دینار</span>
+                        </div>`;
+                    }).join('')}
                     <div style="margin-top: 12px; font-size: 1.2rem; font-weight: bold; color: var(--gold);">
                         کۆی گشتی: ${total.toLocaleString()} دینار
                     </div>
@@ -666,16 +844,19 @@
                 return;
             }
 
-            const total = selectedProducts.reduce((sum, id) => {
-                const product = products.find(p => p.id === id);
-                return sum + (product ? product.price : 0);
+            const total = selectedProducts.reduce((sum, item) => {
+                const product = products.find(p => p.id === item.productId);
+                return sum + (product ? product.price * item.quantity : 0);
             }, 0);
 
             const customer = customers.find(c => c.id === selectedCustomer.id);
             const invoice = {
                 id: Date.now(),
                 date: new Date().toLocaleString('ckb'),
-                products: selectedProducts.map(id => products.find(p => p.id === id)),
+                products: selectedProducts.map(item => {
+                    const product = products.find(p => p.id === item.productId);
+                    return { ...product, quantity: item.quantity };
+                }),
                 total: total,
                 type: type
             };
@@ -690,7 +871,7 @@
             }
 
             localStorage.setItem('customers', JSON.stringify(customers));
-            
+
             // Reset
             selectedProducts = [];
             selectedCustomer = null;
@@ -698,30 +879,60 @@
             document.getElementById('selectedCustomer').innerHTML = '';
             document.getElementById('productSearch').value = '';
             renderProducts();
-            
+
             alert('✅ فرۆشتن بە سەرکەوتوویی تۆمارکرا!');
         }
 
-        // Render Customers
+        // Customer Management
+        function addCustomer() {
+            const nameInput = document.getElementById('newCustomerName');
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert('تکایە ناوی کڕیار بنووسە!');
+                return;
+            }
+            if (customers.some(c => c.name === name)) {
+                alert('ئەم کڕیارە پێشتر تۆمارکراوە!');
+                return;
+            }
+            const newCustomer = {
+                id: Date.now(),
+                name: name,
+                debt: 0,
+                invoices: []
+            };
+            customers.push(newCustomer);
+            localStorage.setItem('customers', JSON.stringify(customers));
+            nameInput.value = '';
+            renderCustomers();
+            alert('✅ کڕیار زیادکرا!');
+        }
+
+        function deleteCustomer(id) {
+            if (!confirm('دڵنیای لە سڕینەوەی ئەم کڕیارە؟')) return;
+            customers = customers.filter(c => c.id !== id);
+            localStorage.setItem('customers', JSON.stringify(customers));
+            renderCustomers();
+        }
+
         function renderCustomers(filter = '') {
             const container = document.getElementById('customerList');
             const filtered = filter ? customers.filter(c => c.name.includes(filter)) : customers;
-            
+
             if (filtered.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">هیچ کڕیارێک نییە</p>';
                 return;
             }
 
             container.innerHTML = filtered.map(c => `
-                <div class="customer-card" onclick="showCustomerDetail(${c.id})">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <strong style="font-size: 1.1rem;">👤 ${c.name}</strong>
-                            ${c.debt > 0 ? `<div style="color: var(--danger); margin-top: 4px;">قەرز: ${c.debt.toLocaleString()} دینار</div>` : '<div style="color: var(--success); margin-top: 4px;">✅ بێ قەرز</div>'}
-                        </div>
-                        <div style="color: var(--text-secondary);">
-                            ${c.invoices.length} فاکتوور
-                        </div>
+                <div class="customer-card">
+                    <div class="customer-info" onclick="showCustomerDetail(${c.id})" style="cursor:pointer;">
+                        <strong style="font-size: 1.1rem;">👤 ${c.name}</strong>
+                        ${c.debt > 0 ? `<div style="color: var(--danger); margin-top: 4px;">قەرز: ${c.debt.toLocaleString()} دینار</div>` : '<div style="color: var(--success); margin-top: 4px;">✅ بێ قەرز</div>'}
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">${c.invoices.length} فاکتوور</div>
+                    </div>
+                    <div class="customer-actions">
+                        <button class="btn btn-danger btn-sm" onclick="deleteCustomer(${c.id})">🗑️</button>
                     </div>
                 </div>
             `).join('');
@@ -738,14 +949,14 @@
 
             document.getElementById('modalCustomerName').textContent = `👤 ${customer.name}`;
             const content = document.getElementById('customerDetailContent');
-            
-            let invoicesHtml = customer.invoices.length > 0 ? 
+
+            let invoicesHtml = customer.invoices.length > 0 ?
                 customer.invoices.map(inv => `
                     <div class="invoice-item">
                         <div class="invoice-header">📋 فاکتووری ${inv.id}</div>
                         <div style="font-size: 0.9rem; margin-bottom: 4px;">📅 ${inv.date}</div>
                         <div style="margin-bottom: 4px;">
-                            ${inv.products.map(p => `<span style="display: inline-block; margin: 2px; padding: 2px 6px; background: var(--border); border-radius: 12px; font-size: 0.85rem;">${p.icon} ${p.name}</span>`).join('')}
+                            ${inv.products.map(p => `<span style="display: inline-block; margin: 2px; padding: 2px 6px; background: var(--border); border-radius: 12px; font-size: 0.85rem;">${p.icon || '📦'} ${p.name} (${p.quantity}x)</span>`).join('')}
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <strong>کۆی گشتی: ${inv.total.toLocaleString()} دینار</strong>
@@ -754,7 +965,7 @@
                             </span>
                         </div>
                     </div>
-                `).join('') : 
+                `).join('') :
                 '<p style="text-align: center; color: var(--text-secondary);">هیچ فاکتوورێک نییە</p>';
 
             content.innerHTML = `
@@ -774,13 +985,100 @@
             document.getElementById('customerDetailModal').classList.remove('active');
         }
 
+        // Inventory Management
+        function renderInventory() {
+            const container = document.getElementById('inventoryList');
+            if (products.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">هیچ کاڵایەک نییە لە مخزن</p>';
+                return;
+            }
+            container.innerHTML = products.map(p => `
+                <div class="inventory-item">
+                    <div class="item-info">
+                        <div class="product-image" style="width:40px;height:40px;font-size:1.8rem;display:flex;align-items:center;justify-content:center;border-radius:8px;overflow:hidden;">
+                            ${p.image ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">` : p.icon}
+                        </div>
+                        <div>
+                            <div><strong>${p.name}</strong></div>
+                            <div style="color:var(--gold);">${p.price.toLocaleString()} دینار</div>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addProduct() {
+            const nameInput = document.getElementById('newProductName');
+            const priceInput = document.getElementById('newProductPrice');
+            const imageInput = document.getElementById('newProductImage');
+
+            const name = nameInput.value.trim();
+            const price = parseInt(priceInput.value);
+
+            if (!name) {
+                alert('تکایە ناوی کاڵا بنووسە!');
+                return;
+            }
+            if (isNaN(price) || price <= 0) {
+                alert('تکایە نرخی دروست بنووسە!');
+                return;
+            }
+
+            const newProduct = {
+                id: Date.now(),
+                name: name,
+                price: price,
+                icon: '📦',
+                image: ''
+            };
+
+            // Handle image upload
+            if (imageInput.files && imageInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    newProduct.image = e.target.result;
+                    products.push(newProduct);
+                    localStorage.setItem('products', JSON.stringify(products));
+                    renderInventory();
+                    renderProducts();
+                    renderPurchaseProducts();
+                };
+                reader.readAsDataURL(imageInput.files[0]);
+            } else {
+                products.push(newProduct);
+                localStorage.setItem('products', JSON.stringify(products));
+                renderInventory();
+                renderProducts();
+                renderPurchaseProducts();
+            }
+
+            nameInput.value = '';
+            priceInput.value = '';
+            imageInput.value = '';
+            alert('✅ کاڵا زیادکرا!');
+        }
+
+        function deleteProduct(id) {
+            if (!confirm('دڵنیای لە سڕینەوەی ئەم کاڵایە؟')) return;
+            products = products.filter(p => p.id !== id);
+            localStorage.setItem('products', JSON.stringify(products));
+            renderInventory();
+            renderProducts();
+            renderPurchaseProducts();
+        }
+
         // Purchases Section
         function renderPurchaseProducts(filter = '') {
             const container = document.getElementById('purchaseProductList');
             const filtered = products.filter(p => p.name.includes(filter));
             container.innerHTML = filtered.map(p => `
                 <div class="product-item ${selectedPurchaseProduct === p.id ? 'selected' : ''}" onclick="selectPurchaseProduct(${p.id})">
-                    <div class="product-image">${p.icon}</div>
+                    <div class="product-image">
+                        ${p.image ? `<img src="${p.image}" alt="${p.name}">` : p.icon}
+                    </div>
                     <div class="product-name">${p.name}</div>
                     <div class="product-price">${p.price.toLocaleString()} دینار</div>
                 </div>
@@ -810,7 +1108,11 @@
                     <strong>${product.icon} ${product.name}</strong>
                     <div style="margin-top: 8px;">
                         <label>بڕی کڕین:</label>
-                        <input type="number" min="1" value="${purchaseQuantity}" onchange="purchaseQuantity = parseInt(this.value) || 1" style="width: 80px; padding: 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary);">
+                        <div class="quantity-control">
+                            <button onclick="purchaseQuantity = Math.max(1, purchaseQuantity - 1); updatePurchaseDetails();">−</button>
+                            <span>${purchaseQuantity}</span>
+                            <button onclick="purchaseQuantity = purchaseQuantity + 1; updatePurchaseDetails();">+</button>
+                        </div>
                     </div>
                     <div style="margin-top: 8px;">
                         <label>نرخی کڕین (دینار):</label>
@@ -825,9 +1127,14 @@
             const priceInput = document.getElementById('purchasePrice');
             if (priceInput) {
                 priceInput.addEventListener('change', function() {
-                    product.price = parseInt(this.value) || 0;
-                    updatePurchaseDetails();
-                    renderProducts();
+                    const p = products.find(pr => pr.id === selectedPurchaseProduct);
+                    if (p) {
+                        p.price = parseInt(this.value) || 0;
+                        localStorage.setItem('products', JSON.stringify(products));
+                        renderProducts();
+                        renderInventory();
+                        updatePurchaseDetails();
+                    }
                 });
             }
         }
@@ -849,7 +1156,7 @@
             };
             purchases.push(purchase);
             localStorage.setItem('purchases', JSON.stringify(purchases));
-            
+
             selectedPurchaseProduct = null;
             purchaseQuantity = 1;
             document.getElementById('purchaseSearch').value = '';
@@ -857,29 +1164,8 @@
             alert('✅ کڕین بە سەرکەوتوویی تۆمارکرا!');
         }
 
-        // Add sample customer (for testing)
-        function addSampleCustomer() {
-            if (customers.length === 0) {
-                customers.push({
-                    id: 1,
-                    name: 'ئاری',
-                    debt: 0,
-                    invoices: []
-                });
-                customers.push({
-                    id: 2,
-                    name: 'سارا',
-                    debt: 0,
-                    invoices: []
-                });
-                localStorage.setItem('customers', JSON.stringify(customers));
-                renderCustomers();
-            }
-        }
-
         // Initialize app
         init();
-        addSampleCustomer();
     </script>
 </body>
 </html>
