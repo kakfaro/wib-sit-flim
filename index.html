@@ -561,7 +561,6 @@
             border-color: var(--accent);
         }
 
-        /* Payment Settlement Styles */
         .debt-item {
             background: var(--bg-card);
             border-radius: var(--radius);
@@ -583,6 +582,7 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .debt-item .debt-actions input {
@@ -768,7 +768,7 @@
         let products = JSON.parse(localStorage.getItem('products')) || [];
         let purchases = JSON.parse(localStorage.getItem('purchases')) || [];
         let settlements = JSON.parse(localStorage.getItem('settlements')) || [];
-        let selectedCustomer = null;
+        let selectedCustomerId = null; // ONLY store the ID, not the whole object
         let selectedProducts = [];
         let selectedPurchaseProduct = null;
         let purchaseQuantity = 1;
@@ -835,7 +835,6 @@
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(section).classList.add('active');
-            // Find the clicked tab and add active class
             document.querySelectorAll('.nav-tab').forEach(t => {
                 if (t.textContent.includes('🛒 فرۆشتن') && section === 'sales') t.classList.add('active');
                 if (t.textContent.includes('👥 کڕیارەکان') && section === 'customers') t.classList.add('active');
@@ -924,6 +923,12 @@
             `;
         }
 
+        // Get the selected customer object from the ID
+        function getSelectedCustomer() {
+            if (selectedCustomerId === null) return null;
+            return customers.find(c => c.id === selectedCustomerId) || null;
+        }
+
         // Customer Search
         function searchCustomers(search) {
             const container = document.getElementById('customerSuggestions');
@@ -943,21 +948,33 @@
         function selectCustomer(customerId) {
             const customer = customers.find(c => c.id === customerId);
             if (customer) {
-                selectedCustomer = customer;
+                selectedCustomerId = customer.id; // Store only the ID
                 document.getElementById('customerSearch').value = customer.name;
                 document.getElementById('customerSuggestions').innerHTML = '';
-                document.getElementById('selectedCustomer').innerHTML = `
-                    <div class="card" style="background: rgba(39, 174, 96, 0.1);">
-                        <strong>✅ کڕیار: ${customer.name}</strong>
-                        ${customer.debt > 0 ? `<span style="color: var(--danger);"> (قەرز: ${customer.debt.toLocaleString()} دینار)</span>` : ''}
-                    </div>
-                `;
+                
+                // Refresh the customer display with fresh data
+                updateSelectedCustomerDisplay();
             }
+        }
+
+        function updateSelectedCustomerDisplay() {
+            const customer = getSelectedCustomer();
+            if (!customer) {
+                document.getElementById('selectedCustomer').innerHTML = '';
+                return;
+            }
+            document.getElementById('selectedCustomer').innerHTML = `
+                <div class="card" style="background: rgba(39, 174, 96, 0.1);">
+                    <strong>✅ کڕیار: ${customer.name}</strong>
+                    ${customer.debt > 0 ? `<span style="color: var(--danger);"> (قەرز: ${customer.debt.toLocaleString()} دینار)</span>` : ''}
+                </div>
+            `;
         }
 
         // Process Sale
         function processSale(type) {
-            if (!selectedCustomer) {
+            const customer = getSelectedCustomer();
+            if (!customer) {
                 alert('تکایە کڕیارێک هەڵبژێرە!');
                 return;
             }
@@ -971,7 +988,13 @@
                 return sum + (product ? product.price * item.quantity : 0);
             }, 0);
 
-            const customer = customers.find(c => c.id === selectedCustomer.id);
+            // Get the latest customer data
+            const customerIndex = customers.findIndex(c => c.id === customer.id);
+            if (customerIndex === -1) {
+                alert('کڕیار نەدۆزرایەوە!');
+                return;
+            }
+
             const invoice = {
                 id: Date.now(),
                 date: new Date().toLocaleString('ckb'),
@@ -980,23 +1003,20 @@
                     return { ...product, quantity: item.quantity };
                 }),
                 total: total,
-                type: type
+                type: type,
+                paid: type === 'paid'
             };
 
-            if (type === 'paid') {
-                invoice.paid = true;
-                customer.invoices.push(invoice);
-            } else {
-                invoice.paid = false;
-                customer.debt += total;
-                customer.invoices.push(invoice);
+            if (type === 'credit') {
+                customers[customerIndex].debt += total;
             }
+            customers[customerIndex].invoices.push(invoice);
 
             localStorage.setItem('customers', JSON.stringify(customers));
 
             // Reset
             selectedProducts = [];
-            selectedCustomer = null;
+            selectedCustomerId = null;
             document.getElementById('customerSearch').value = '';
             document.getElementById('selectedCustomer').innerHTML = '';
             document.getElementById('productSearch').value = '';
@@ -1036,6 +1056,11 @@
             if (!confirm('دڵنیای لە سڕینەوەی ئەم کڕیارە؟')) return;
             customers = customers.filter(c => c.id !== id);
             localStorage.setItem('customers', JSON.stringify(customers));
+            if (selectedCustomerId === id) {
+                selectedCustomerId = null;
+                document.getElementById('selectedCustomer').innerHTML = '';
+                document.getElementById('customerSearch').value = '';
+            }
             renderCustomers();
             renderDebtList();
         }
@@ -1181,7 +1206,6 @@
                 image: ''
             };
 
-            // Handle image upload
             if (imageInput.files && imageInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -1325,7 +1349,6 @@
                 return;
             }
 
-            // Get settlement history for each customer
             container.innerHTML = filtered.map(c => {
                 const customerSettlements = settlements.filter(s => s.customerId === c.id);
                 return `
@@ -1354,9 +1377,10 @@
         }
 
         function processSettlement(customerId) {
-            const customer = customers.find(c => c.id === customerId);
-            if (!customer) return;
-
+            const customerIndex = customers.findIndex(c => c.id === customerId);
+            if (customerIndex === -1) return;
+            
+            const customer = customers[customerIndex];
             const amountInput = document.getElementById(`settlementAmount_${customerId}`);
             const amount = parseInt(amountInput.value);
 
@@ -1370,7 +1394,6 @@
                 return;
             }
 
-            // Record settlement
             const settlement = {
                 id: Date.now(),
                 customerId: customer.id,
@@ -1380,17 +1403,20 @@
                 remainingDebt: customer.debt - amount
             };
 
-            // Update customer debt
             customer.debt -= amount;
             localStorage.setItem('customers', JSON.stringify(customers));
 
-            // Save settlement
             settlements.push(settlement);
             localStorage.setItem('settlements', JSON.stringify(settlements));
 
             amountInput.value = '';
             renderDebtList(document.getElementById('debtSearch').value);
             renderCustomers();
+            
+            // Update the selected customer display if this customer is selected
+            if (selectedCustomerId === customerId) {
+                updateSelectedCustomerDisplay();
+            }
 
             alert(`✅ واسڵ بە سەرکەوتوویی تۆمارکرا! 
         بڕی پارە: ${amount.toLocaleString()} دینار
@@ -1433,12 +1459,6 @@
             }
 
             document.getElementById('customerDetailModal').classList.add('active');
-        }
-
-        // Override closeModal to also clear the title if needed
-        const originalCloseModal = closeModal;
-        closeModal = function() {
-            document.getElementById('customerDetailModal').classList.remove('active');
         }
 
         // Initialize app
