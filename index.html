@@ -861,19 +861,28 @@
 
         // ============ INITIALIZE DATA - EMPTY START ============
         let customers = loadData(STORAGE_KEYS.customers, []);
-        let products = loadData(STORAGE_KEYS.products, []);   // <-- empty array, no default products
+        let products = loadData(STORAGE_KEYS.products, []);
         let purchases = loadData(STORAGE_KEYS.purchases, []);
         let settlements = loadData(STORAGE_KEYS.settlements, []);
 
-        // Ensure products is always an array (in case it was corrupted)
+        // Ensure data is always an array
         if (!Array.isArray(products)) products = [];
         if (!Array.isArray(customers)) customers = [];
         if (!Array.isArray(purchases)) purchases = [];
         if (!Array.isArray(settlements)) settlements = [];
 
-        // Save empty initial state if nothing exists yet (prevents default products from ever loading)
+        // Save empty initial state if nothing exists yet
         if (localStorage.getItem(STORAGE_KEYS.products) === null) {
             saveData(STORAGE_KEYS.products, []);
+        }
+        if (localStorage.getItem(STORAGE_KEYS.customers) === null) {
+            saveData(STORAGE_KEYS.customers, []);
+        }
+        if (localStorage.getItem(STORAGE_KEYS.purchases) === null) {
+            saveData(STORAGE_KEYS.purchases, []);
+        }
+        if (localStorage.getItem(STORAGE_KEYS.settlements) === null) {
+            saveData(STORAGE_KEYS.settlements, []);
         }
 
         // ============ GLOBAL STATE ============
@@ -1104,19 +1113,26 @@
             if (type === 'credit') {
                 customers[customerIndex].debt += total;
             }
+            
+            // Make sure invoices array exists
             if (!customers[customerIndex].invoices) {
                 customers[customerIndex].invoices = [];
             }
             customers[customerIndex].invoices.push(invoice);
 
+            // Save customers data immediately
             saveData(STORAGE_KEYS.customers, customers);
 
+            // Reset selection
             selectedProducts = [];
             selectedCustomerId = null;
             document.getElementById('customerSearch').value = '';
             document.getElementById('selectedCustomer').innerHTML = '';
             document.getElementById('productSearch').value = '';
+            
+            // Refresh all views
             renderProducts();
+            renderCustomers();
             renderDebtList();
             updateBackupInfo();
 
@@ -1336,7 +1352,6 @@
         function deleteProduct(id) {
             if (!confirm('دڵنیای لە سڕینەوەی ئەم کاڵایە؟')) return;
             products = products.filter(p => p.id !== id);
-            // Also remove from selected products if any
             selectedProducts = selectedProducts.filter(item => item.productId !== id);
             saveData(STORAGE_KEYS.products, products);
             renderInventory();
