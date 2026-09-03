@@ -940,6 +940,11 @@
                 }
             });
             
+            if (section === 'sales') {
+                renderProducts(document.getElementById('productSearch')?.value || '');
+                updateSelectedProductsDisplay();
+                updateSelectedCustomerDisplay();
+            }
             if (section === 'customers') renderCustomers();
             if (section === 'inventory') renderInventory();
             if (section === 'purchases') renderPurchaseProducts();
@@ -950,6 +955,8 @@
         // ============ PRODUCT RENDERING FOR SALES ============
         function renderProducts(filter = '') {
             const container = document.getElementById('productList');
+            if (!container) return;
+            
             const filtered = products.filter(p => p.name.includes(filter));
             if (filtered.length === 0) {
                 container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">هیچ کاڵایەک نییە. تکایە سەرەتا کاڵا زیاد بکە.</p>';
@@ -958,14 +965,17 @@
             container.innerHTML = filtered.map(p => {
                 const isSelected = selectedProducts.some(item => item.productId === p.id);
                 return `
-                <div class="product-item ${isSelected ? 'selected' : ''}" onclick="toggleProduct(${p.id})">
-                    <div class="product-image">
-                        ${p.image ? `<img src="${p.image}" alt="${p.name}">` : p.icon || '📦'}
+                    <div class="product-item ${isSelected ? 'selected' : ''}" onclick="toggleProduct(${p.id})">
+                        <div class="product-image">
+                            ${p.image ? `<img src="${p.image}" alt="${p.name}">` : (p.icon || '📦')}
+                        </div>
+                        <div class="product-name">${p.name}</div>
+                        <div class="product-price">${p.price.toLocaleString()} دینار</div>
+                        ${isSelected ? `<div style="font-size:0.8rem;color:var(--success);">✅ هەڵبژێردراوە</div>` : ''}
                     </div>
-                    <div class="product-name">${p.name}</div>
-                    <div class="product-price">${p.price.toLocaleString()} دینار</div>
-                </div>
-            `}).join('');
+                `;
+            }).join('');
+            
             updateSelectedProductsDisplay();
         }
 
@@ -990,13 +1000,15 @@
             const item = selectedProducts.find(p => p.productId === productId);
             if (item) {
                 item.quantity = Math.max(1, item.quantity + change);
-                updateSelectedProductsDisplay();
+                renderProducts(document.getElementById('productSearch').value);
             }
         }
 
         function updateSelectedProductsDisplay() {
             const container = document.getElementById('selectedProducts');
-            if (selectedProducts.length === 0) {
+            if (!container) return;
+            
+            if (!selectedProducts || selectedProducts.length === 0) {
                 container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">هیچ کاڵایەک هەڵنەبژێردراوە</p>';
                 return;
             }
@@ -1004,19 +1016,21 @@
                 const product = products.find(p => p.id === item.productId);
                 return sum + (product ? product.price * item.quantity : 0);
             }, 0);
+            
             container.innerHTML = `
                 <div class="card">
                     <strong>کاڵا هەڵبژێردراوەکان:</strong>
                     ${selectedProducts.map(item => {
                         const product = products.find(p => p.id === item.productId);
+                        if (!product) return '';
                         return `<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border);">
-                            <span>${product ? `${product.icon || '📦'} ${product.name}` : ''}</span>
+                            <span>${product.icon || '📦'} ${product.name}</span>
                             <div class="quantity-control" style="margin:0;">
                                 <button onclick="updateProductQuantity(${item.productId}, -1)">−</button>
                                 <span>${item.quantity}</span>
                                 <button onclick="updateProductQuantity(${item.productId}, 1)">+</button>
                             </div>
-                            <span style="color:var(--gold);">${(product ? product.price * item.quantity : 0).toLocaleString()} دینار</span>
+                            <span style="color:var(--gold);">${(product.price * item.quantity).toLocaleString()} دینار</span>
                         </div>`;
                     }).join('')}
                     <div style="margin-top: 12px; font-size: 1.2rem; font-weight: bold; color: var(--gold);">
@@ -1063,11 +1077,12 @@
 
         function updateSelectedCustomerDisplay() {
             const customer = getSelectedCustomer();
+            const container = document.getElementById('selectedCustomer');
             if (!customer) {
-                document.getElementById('selectedCustomer').innerHTML = '';
+                container.innerHTML = '';
                 return;
             }
-            document.getElementById('selectedCustomer').innerHTML = `
+            container.innerHTML = `
                 <div class="card" style="background: rgba(39, 174, 96, 0.1);">
                     <strong>✅ کڕیار: ${customer.name}</strong>
                     ${customer.debt > 0 ? `<span style="color: var(--danger);"> (قەرز: ${customer.debt.toLocaleString()} دینار)</span>` : ''}
@@ -1110,28 +1125,32 @@
                 paid: type === 'paid'
             };
 
-            if (type === 'credit') {
-                customers[customerIndex].debt += total;
-            }
-            
-            // Make sure invoices array exists
             if (!customers[customerIndex].invoices) {
                 customers[customerIndex].invoices = [];
             }
             customers[customerIndex].invoices.push(invoice);
 
+            if (type === 'credit') {
+                customers[customerIndex].debt = (customers[customerIndex].debt || 0) + total;
+            }
+
             // Save customers data immediately
             saveData(STORAGE_KEYS.customers, customers);
 
             // Reset selection
+            const searchValue = document.getElementById('productSearch').value;
             selectedProducts = [];
             selectedCustomerId = null;
+            
+            // Clear UI fields
             document.getElementById('customerSearch').value = '';
             document.getElementById('selectedCustomer').innerHTML = '';
             document.getElementById('productSearch').value = '';
+            document.getElementById('selectedProducts').innerHTML = '';
+            document.getElementById('customerSuggestions').innerHTML = '';
             
-            // Refresh all views
-            renderProducts();
+            // Force re-render all views
+            renderProducts('');
             renderCustomers();
             renderDebtList();
             updateBackupInfo();
