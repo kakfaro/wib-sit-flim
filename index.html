@@ -615,6 +615,52 @@
             align-items: center;
         }
 
+        /* Backup & Restore Styles */
+        .backup-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid var(--border);
+        }
+
+        .backup-section .backup-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .backup-section .backup-actions .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .backup-section .backup-actions .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .backup-info {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .backup-info span {
+            background: var(--bg-secondary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
         @media (max-width: 480px) {
             .product-list {
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -665,6 +711,7 @@
         <button class="nav-tab" onclick="showSection('inventory')">📦 مخزن</button>
         <button class="nav-tab" onclick="showSection('purchases')">📥 کڕین</button>
         <button class="nav-tab" onclick="showSection('settlements')">💰 واسڵ</button>
+        <button class="nav-tab" onclick="showSection('backup')">💾 باکەپ</button>
     </nav>
 
     <!-- Sales Section -->
@@ -751,6 +798,31 @@
         </div>
     </section>
 
+    <!-- Backup Section -->
+    <section id="backup" class="section">
+        <div class="card">
+            <div class="card-title">💾 باکەپ و گەڕاندنەوەی داتا</div>
+            <div class="backup-section">
+                <div class="backup-actions">
+                    <button class="btn btn-success" onclick="backupData()">📥 دانلۆدی باکەپ</button>
+                    <div class="file-input-wrapper">
+                        <button class="btn btn-primary">📤 گەڕاندنەوەی باکەپ</button>
+                        <input type="file" id="restoreFileInput" accept=".json" onchange="restoreData(event)">
+                    </div>
+                </div>
+                <div class="backup-info">
+                    <span>📊 کڕیار: <span id="backupCustomerCount">0</span></span>
+                    <span>📦 کاڵا: <span id="backupProductCount">0</span></span>
+                    <span>📥 کڕین: <span id="backupPurchaseCount">0</span></span>
+                    <span>💰 واسڵ: <span id="backupSettlementCount">0</span></span>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.85rem; color: var(--text-secondary);">
+                    ℹ️ باکەپ هەموو داتاکان (کڕیار، کاڵا، کڕین، واسڵ) دەگرێت. کاتێک باکەپ دەگەڕێنیتەوە، داتاکانی ئێستا دەسنووسرێن.
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Customer Detail Modal -->
     <div id="customerDetailModal" class="modal">
         <div class="modal-content">
@@ -763,46 +835,66 @@
     </div>
 
     <script>
-        // Data Storage
-        let customers = JSON.parse(localStorage.getItem('customers')) || [];
-        let products = JSON.parse(localStorage.getItem('products')) || [];
-        let purchases = JSON.parse(localStorage.getItem('purchases')) || [];
-        let settlements = JSON.parse(localStorage.getItem('settlements')) || [];
-        let selectedCustomerId = null; // ONLY store the ID, not the whole object
+        // ============ DEFAULT PRODUCTS ============
+        const DEFAULT_PRODUCTS = [
+            { id: 1, name: 'چای', price: 1000, icon: '🍵', image: '' },
+            { id: 2, name: 'قاوە', price: 2000, icon: '☕', image: '' },
+            { id: 3, name: 'شایی', price: 1500, icon: '🫖', image: '' },
+            { id: 4, name: 'کەباب', price: 5000, icon: '🍢', image: '' },
+            { id: 5, name: 'بەفرەو', price: 3000, icon: '🍨', image: '' },
+            { id: 6, name: 'کێک', price: 2500, icon: '🍰', image: '' },
+            { id: 7, name: 'پیچا', price: 4000, icon: '🍕', image: '' },
+            { id: 8, name: 'نوقڵ', price: 1500, icon: '🍬', image: '' },
+            { id: 9, name: 'شیرینی', price: 2000, icon: '🍪', image: '' },
+            { id: 10, name: 'ئاو', price: 500, icon: '💧', image: '' },
+            { id: 11, name: 'ناردن', price: 3000, icon: '🥤', image: '' },
+            { id: 12, name: 'چای سەوز', price: 1200, icon: '🌿', image: '' }
+        ];
+
+        // ============ DATA STORAGE KEYS ============
+        const STORAGE_KEYS = {
+            customers: 'customers',
+            products: 'products',
+            purchases: 'purchases',
+            settlements: 'settlements'
+        };
+
+        // ============ DATA LOADING WITH DEFAULTS ============
+        function loadData(key, defaultValue) {
+            const data = localStorage.getItem(key);
+            if (data) {
+                try {
+                    return JSON.parse(data);
+                } catch (e) {
+                    return defaultValue;
+                }
+            }
+            return defaultValue;
+        }
+
+        function saveData(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        // ============ INITIALIZE DATA ============
+        let customers = loadData(STORAGE_KEYS.customers, []);
+        let products = loadData(STORAGE_KEYS.products, []);
+        let purchases = loadData(STORAGE_KEYS.purchases, []);
+        let settlements = loadData(STORAGE_KEYS.settlements, []);
+
+        // If products is empty, load default products
+        if (products.length === 0) {
+            products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+            saveData(STORAGE_KEYS.products, products);
+        }
+
+        // ============ GLOBAL STATE ============
+        let selectedCustomerId = null;
         let selectedProducts = [];
         let selectedPurchaseProduct = null;
         let purchaseQuantity = 1;
 
-        // Default products if empty
-        if (products.length === 0) {
-            products = [
-                { id: 1, name: 'چای', price: 1000, icon: '🍵', image: '' },
-                { id: 2, name: 'قاوە', price: 2000, icon: '☕', image: '' },
-                { id: 3, name: 'شایی', price: 1500, icon: '🫖', image: '' },
-                { id: 4, name: 'کەباب', price: 5000, icon: '🍢', image: '' },
-                { id: 5, name: 'بەفرەو', price: 3000, icon: '🍨', image: '' },
-                { id: 6, name: 'کێک', price: 2500, icon: '🍰', image: '' },
-                { id: 7, name: 'پیچا', price: 4000, icon: '🍕', image: '' },
-                { id: 8, name: 'نوقڵ', price: 1500, icon: '🍬', image: '' },
-                { id: 9, name: 'شیرینی', price: 2000, icon: '🍪', image: '' },
-                { id: 10, name: 'ئاو', price: 500, icon: '💧', image: '' },
-                { id: 11, name: 'ناردن', price: 3000, icon: '🥤', image: '' },
-                { id: 12, name: 'چای سەوز', price: 1200, icon: '🌿', image: '' }
-            ];
-            localStorage.setItem('products', JSON.stringify(products));
-        }
-
-        // Initialize
-        function init() {
-            loadTheme();
-            renderProducts();
-            renderCustomers();
-            renderPurchaseProducts();
-            renderInventory();
-            renderDebtList();
-        }
-
-        // Theme Toggle
+        // ============ THEME ============
         function toggleTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -830,25 +922,35 @@
             }
         }
 
-        // Navigation
+        // ============ NAVIGATION ============
         function showSection(section) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(section).classList.add('active');
+            
+            const tabMap = {
+                'sales': '🛒 فرۆشتن',
+                'customers': '👥 کڕیارەکان',
+                'inventory': '📦 مخزن',
+                'purchases': '📥 کڕین',
+                'settlements': '💰 واسڵ',
+                'backup': '💾 باکەپ'
+            };
+            
             document.querySelectorAll('.nav-tab').forEach(t => {
-                if (t.textContent.includes('🛒 فرۆشتن') && section === 'sales') t.classList.add('active');
-                if (t.textContent.includes('👥 کڕیارەکان') && section === 'customers') t.classList.add('active');
-                if (t.textContent.includes('📦 مخزن') && section === 'inventory') t.classList.add('active');
-                if (t.textContent.includes('📥 کڕین') && section === 'purchases') t.classList.add('active');
-                if (t.textContent.includes('💰 واسڵ') && section === 'settlements') t.classList.add('active');
+                if (t.textContent.includes(tabMap[section])) {
+                    t.classList.add('active');
+                }
             });
+            
             if (section === 'customers') renderCustomers();
             if (section === 'inventory') renderInventory();
             if (section === 'purchases') renderPurchaseProducts();
             if (section === 'settlements') renderDebtList();
+            if (section === 'backup') updateBackupInfo();
         }
 
-        // Product Rendering for Sales
+        // ============ PRODUCT RENDERING FOR SALES ============
         function renderProducts(filter = '') {
             const container = document.getElementById('productList');
             const filtered = products.filter(p => p.name.includes(filter));
@@ -923,13 +1025,12 @@
             `;
         }
 
-        // Get the selected customer object from the ID
         function getSelectedCustomer() {
             if (selectedCustomerId === null) return null;
             return customers.find(c => c.id === selectedCustomerId) || null;
         }
 
-        // Customer Search
+        // ============ CUSTOMER SEARCH ============
         function searchCustomers(search) {
             const container = document.getElementById('customerSuggestions');
             if (search.length < 1) {
@@ -948,11 +1049,9 @@
         function selectCustomer(customerId) {
             const customer = customers.find(c => c.id === customerId);
             if (customer) {
-                selectedCustomerId = customer.id; // Store only the ID
+                selectedCustomerId = customer.id;
                 document.getElementById('customerSearch').value = customer.name;
                 document.getElementById('customerSuggestions').innerHTML = '';
-                
-                // Refresh the customer display with fresh data
                 updateSelectedCustomerDisplay();
             }
         }
@@ -971,7 +1070,7 @@
             `;
         }
 
-        // Process Sale
+        // ============ PROCESS SALE ============
         function processSale(type) {
             const customer = getSelectedCustomer();
             if (!customer) {
@@ -988,7 +1087,6 @@
                 return sum + (product ? product.price * item.quantity : 0);
             }, 0);
 
-            // Get the latest customer data
             const customerIndex = customers.findIndex(c => c.id === customer.id);
             if (customerIndex === -1) {
                 alert('کڕیار نەدۆزرایەوە!');
@@ -1012,9 +1110,8 @@
             }
             customers[customerIndex].invoices.push(invoice);
 
-            localStorage.setItem('customers', JSON.stringify(customers));
+            saveData(STORAGE_KEYS.customers, customers);
 
-            // Reset
             selectedProducts = [];
             selectedCustomerId = null;
             document.getElementById('customerSearch').value = '';
@@ -1022,11 +1119,12 @@
             document.getElementById('productSearch').value = '';
             renderProducts();
             renderDebtList();
+            updateBackupInfo();
 
             alert('✅ فرۆشتن بە سەرکەوتوویی تۆمارکرا!');
         }
 
-        // Customer Management
+        // ============ CUSTOMER MANAGEMENT ============
         function addCustomer() {
             const nameInput = document.getElementById('newCustomerName');
             const name = nameInput.value.trim();
@@ -1045,17 +1143,18 @@
                 invoices: []
             };
             customers.push(newCustomer);
-            localStorage.setItem('customers', JSON.stringify(customers));
+            saveData(STORAGE_KEYS.customers, customers);
             nameInput.value = '';
             renderCustomers();
             renderDebtList();
+            updateBackupInfo();
             alert('✅ کڕیار زیادکرا!');
         }
 
         function deleteCustomer(id) {
             if (!confirm('دڵنیای لە سڕینەوەی ئەم کڕیارە؟')) return;
             customers = customers.filter(c => c.id !== id);
-            localStorage.setItem('customers', JSON.stringify(customers));
+            saveData(STORAGE_KEYS.customers, customers);
             if (selectedCustomerId === id) {
                 selectedCustomerId = null;
                 document.getElementById('selectedCustomer').innerHTML = '';
@@ -1063,6 +1162,7 @@
             }
             renderCustomers();
             renderDebtList();
+            updateBackupInfo();
         }
 
         function renderCustomers(filter = '') {
@@ -1092,7 +1192,6 @@
             renderCustomers(search);
         }
 
-        // Show Customer Detail
         function showCustomerDetail(customerId) {
             const customer = customers.find(c => c.id === customerId);
             if (!customer) return;
@@ -1135,7 +1234,7 @@
             document.getElementById('customerDetailModal').classList.remove('active');
         }
 
-        // Inventory Management
+        // ============ INVENTORY MANAGEMENT ============
         function renderInventory() {
             const container = document.getElementById('inventoryList');
             if (products.length === 0) {
@@ -1174,10 +1273,11 @@
             const product = products.find(p => p.id === productId);
             if (product) {
                 product.price = price;
-                localStorage.setItem('products', JSON.stringify(products));
+                saveData(STORAGE_KEYS.products, products);
                 renderProducts();
                 renderInventory();
                 renderPurchaseProducts();
+                updateBackupInfo();
             }
         }
 
@@ -1211,18 +1311,20 @@
                 reader.onload = function(e) {
                     newProduct.image = e.target.result;
                     products.push(newProduct);
-                    localStorage.setItem('products', JSON.stringify(products));
+                    saveData(STORAGE_KEYS.products, products);
                     renderInventory();
                     renderProducts();
                     renderPurchaseProducts();
+                    updateBackupInfo();
                 };
                 reader.readAsDataURL(imageInput.files[0]);
             } else {
                 products.push(newProduct);
-                localStorage.setItem('products', JSON.stringify(products));
+                saveData(STORAGE_KEYS.products, products);
                 renderInventory();
                 renderProducts();
                 renderPurchaseProducts();
+                updateBackupInfo();
             }
 
             nameInput.value = '';
@@ -1234,13 +1336,14 @@
         function deleteProduct(id) {
             if (!confirm('دڵنیای لە سڕینەوەی ئەم کاڵایە؟')) return;
             products = products.filter(p => p.id !== id);
-            localStorage.setItem('products', JSON.stringify(products));
+            saveData(STORAGE_KEYS.products, products);
             renderInventory();
             renderProducts();
             renderPurchaseProducts();
+            updateBackupInfo();
         }
 
-        // Purchases Section
+        // ============ PURCHASES ============
         function renderPurchaseProducts(filter = '') {
             const container = document.getElementById('purchaseProductList');
             const filtered = products.filter(p => p.name.includes(filter));
@@ -1300,10 +1403,11 @@
                     const p = products.find(pr => pr.id === selectedPurchaseProduct);
                     if (p) {
                         p.price = parseInt(this.value) || 0;
-                        localStorage.setItem('products', JSON.stringify(products));
+                        saveData(STORAGE_KEYS.products, products);
                         renderProducts();
                         renderInventory();
                         updatePurchaseDetails();
+                        updateBackupInfo();
                     }
                 });
             }
@@ -1325,16 +1429,17 @@
                 date: new Date().toLocaleString('ckb')
             };
             purchases.push(purchase);
-            localStorage.setItem('purchases', JSON.stringify(purchases));
+            saveData(STORAGE_KEYS.purchases, purchases);
 
             selectedPurchaseProduct = null;
             purchaseQuantity = 1;
             document.getElementById('purchaseSearch').value = '';
             renderPurchaseProducts();
+            updateBackupInfo();
             alert('✅ کڕین بە سەرکەوتوویی تۆمارکرا!');
         }
 
-        // ============ PAYMENT SETTLEMENT (واسڵکردنی پارە) ============
+        // ============ SETTLEMENTS ============
         function renderDebtList(filter = '') {
             const container = document.getElementById('debtList');
             const debtCustomers = customers.filter(c => c.debt > 0);
@@ -1404,16 +1509,16 @@
             };
 
             customer.debt -= amount;
-            localStorage.setItem('customers', JSON.stringify(customers));
+            saveData(STORAGE_KEYS.customers, customers);
 
             settlements.push(settlement);
-            localStorage.setItem('settlements', JSON.stringify(settlements));
+            saveData(STORAGE_KEYS.settlements, settlements);
 
             amountInput.value = '';
             renderDebtList(document.getElementById('debtSearch').value);
             renderCustomers();
+            updateBackupInfo();
             
-            // Update the selected customer display if this customer is selected
             if (selectedCustomerId === customerId) {
                 updateSelectedCustomerDisplay();
             }
@@ -1461,7 +1566,108 @@
             document.getElementById('customerDetailModal').classList.add('active');
         }
 
-        // Initialize app
+        // ============ BACKUP & RESTORE ============
+        function updateBackupInfo() {
+            document.getElementById('backupCustomerCount').textContent = customers.length;
+            document.getElementById('backupProductCount').textContent = products.length;
+            document.getElementById('backupPurchaseCount').textContent = purchases.length;
+            document.getElementById('backupSettlementCount').textContent = settlements.length;
+        }
+
+        function backupData() {
+            const data = {
+                version: '1.0',
+                timestamp: new Date().toISOString(),
+                customers: customers,
+                products: products,
+                purchases: purchases,
+                settlements: settlements
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chai_khana_backup_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function restoreData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Validate data structure
+                    if (!data.customers || !data.products || !data.purchases || !data.settlements) {
+                        alert('فایلی باکەپ دروست نییە! تکایە فایلی دروست هەڵبژێرە.');
+                        return;
+                    }
+
+                    // Confirm restore
+                    if (!confirm('ئەمە هەموو داتاکانی ئێستا دەسنووسێت! دڵنیای لە گەڕاندنەوەی باکەپ؟')) {
+                        return;
+                    }
+
+                    // Restore data
+                    customers = data.customers;
+                    products = data.products;
+                    purchases = data.purchases;
+                    settlements = data.settlements;
+
+                    saveData(STORAGE_KEYS.customers, customers);
+                    saveData(STORAGE_KEYS.products, products);
+                    saveData(STORAGE_KEYS.purchases, purchases);
+                    saveData(STORAGE_KEYS.settlements, settlements);
+
+                    // Reset UI state
+                    selectedCustomerId = null;
+                    selectedProducts = [];
+                    selectedPurchaseProduct = null;
+                    purchaseQuantity = 1;
+
+                    document.getElementById('customerSearch').value = '';
+                    document.getElementById('selectedCustomer').innerHTML = '';
+                    document.getElementById('productSearch').value = '';
+                    document.getElementById('purchaseSearch').value = '';
+
+                    // Re-render everything
+                    renderProducts();
+                    renderCustomers();
+                    renderPurchaseProducts();
+                    renderInventory();
+                    renderDebtList();
+                    updateBackupInfo();
+
+                    alert('✅ باکەپ بە سەرکەوتوویی گەڕایەوە!');
+                } catch (error) {
+                    alert('هەڵە لە خوێندنەوەی فایلەکە! تکایە فایلی باکەپی دروست هەڵبژێرە.');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+            // Reset the input so the same file can be selected again
+            event.target.value = '';
+        }
+
+        // ============ INITIALIZE APP ============
+        function init() {
+            loadTheme();
+            renderProducts();
+            renderCustomers();
+            renderPurchaseProducts();
+            renderInventory();
+            renderDebtList();
+            updateBackupInfo();
+        }
+
+        // Start the app
         init();
     </script>
 </body>
