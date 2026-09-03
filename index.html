@@ -615,7 +615,6 @@
             align-items: center;
         }
 
-        /* Backup & Restore Styles */
         .backup-section {
             margin-top: 20px;
             padding-top: 20px;
@@ -835,22 +834,6 @@
     </div>
 
     <script>
-        // ============ DEFAULT PRODUCTS ============
-        const DEFAULT_PRODUCTS = [
-            { id: 1, name: 'چای', price: 1000, icon: '🍵', image: '' },
-            { id: 2, name: 'قاوە', price: 2000, icon: '☕', image: '' },
-            { id: 3, name: 'شایی', price: 1500, icon: '🫖', image: '' },
-            { id: 4, name: 'کەباب', price: 5000, icon: '🍢', image: '' },
-            { id: 5, name: 'بەفرەو', price: 3000, icon: '🍨', image: '' },
-            { id: 6, name: 'کێک', price: 2500, icon: '🍰', image: '' },
-            { id: 7, name: 'پیچا', price: 4000, icon: '🍕', image: '' },
-            { id: 8, name: 'نوقڵ', price: 1500, icon: '🍬', image: '' },
-            { id: 9, name: 'شیرینی', price: 2000, icon: '🍪', image: '' },
-            { id: 10, name: 'ئاو', price: 500, icon: '💧', image: '' },
-            { id: 11, name: 'ناردن', price: 3000, icon: '🥤', image: '' },
-            { id: 12, name: 'چای سەوز', price: 1200, icon: '🌿', image: '' }
-        ];
-
         // ============ DATA STORAGE KEYS ============
         const STORAGE_KEYS = {
             customers: 'customers',
@@ -876,16 +859,21 @@
             localStorage.setItem(key, JSON.stringify(data));
         }
 
-        // ============ INITIALIZE DATA ============
+        // ============ INITIALIZE DATA - EMPTY START ============
         let customers = loadData(STORAGE_KEYS.customers, []);
-        let products = loadData(STORAGE_KEYS.products, []);
+        let products = loadData(STORAGE_KEYS.products, []);   // <-- empty array, no default products
         let purchases = loadData(STORAGE_KEYS.purchases, []);
         let settlements = loadData(STORAGE_KEYS.settlements, []);
 
-        // If products is empty, load default products
-        if (products.length === 0) {
-            products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
-            saveData(STORAGE_KEYS.products, products);
+        // Ensure products is always an array (in case it was corrupted)
+        if (!Array.isArray(products)) products = [];
+        if (!Array.isArray(customers)) customers = [];
+        if (!Array.isArray(purchases)) purchases = [];
+        if (!Array.isArray(settlements)) settlements = [];
+
+        // Save empty initial state if nothing exists yet (prevents default products from ever loading)
+        if (localStorage.getItem(STORAGE_KEYS.products) === null) {
+            saveData(STORAGE_KEYS.products, []);
         }
 
         // ============ GLOBAL STATE ============
@@ -954,12 +942,16 @@
         function renderProducts(filter = '') {
             const container = document.getElementById('productList');
             const filtered = products.filter(p => p.name.includes(filter));
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">هیچ کاڵایەک نییە. تکایە سەرەتا کاڵا زیاد بکە.</p>';
+                return;
+            }
             container.innerHTML = filtered.map(p => {
                 const isSelected = selectedProducts.some(item => item.productId === p.id);
                 return `
                 <div class="product-item ${isSelected ? 'selected' : ''}" onclick="toggleProduct(${p.id})">
                     <div class="product-image">
-                        ${p.image ? `<img src="${p.image}" alt="${p.name}">` : p.icon}
+                        ${p.image ? `<img src="${p.image}" alt="${p.name}">` : p.icon || '📦'}
                     </div>
                     <div class="product-name">${p.name}</div>
                     <div class="product-price">${p.price.toLocaleString()} دینار</div>
@@ -1009,7 +1001,7 @@
                     ${selectedProducts.map(item => {
                         const product = products.find(p => p.id === item.productId);
                         return `<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border);">
-                            <span>${product ? `${product.icon} ${product.name}` : ''}</span>
+                            <span>${product ? `${product.icon || '📦'} ${product.name}` : ''}</span>
                             <div class="quantity-control" style="margin:0;">
                                 <button onclick="updateProductQuantity(${item.productId}, -1)">−</button>
                                 <span>${item.quantity}</span>
@@ -1038,6 +1030,10 @@
                 return;
             }
             const filtered = customers.filter(c => c.name.includes(search));
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="padding:10px;text-align:center;color:var(--text-secondary);">هیچ کڕیارێک نەدۆزرایەوە</div>';
+                return;
+            }
             container.innerHTML = filtered.map(c => `
                 <div class="suggestion-item" onclick="selectCustomer(${c.id})">
                     <span>👤</span>
@@ -1107,6 +1103,9 @@
 
             if (type === 'credit') {
                 customers[customerIndex].debt += total;
+            }
+            if (!customers[customerIndex].invoices) {
+                customers[customerIndex].invoices = [];
             }
             customers[customerIndex].invoices.push(invoice);
 
@@ -1179,7 +1178,7 @@
                     <div class="customer-info" onclick="showCustomerDetail(${c.id})" style="cursor:pointer;">
                         <strong style="font-size: 1.1rem;">👤 ${c.name}</strong>
                         ${c.debt > 0 ? `<div style="color: var(--danger); margin-top: 4px;">قەرز: ${c.debt.toLocaleString()} دینار</div>` : '<div style="color: var(--success); margin-top: 4px;">✅ بێ قەرز</div>'}
-                        <div style="color: var(--text-secondary); font-size: 0.9rem;">${c.invoices.length} فاکتوور</div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">${(c.invoices || []).length} فاکتوور</div>
                     </div>
                     <div class="customer-actions">
                         <button class="btn btn-danger btn-sm" onclick="deleteCustomer(${c.id})">🗑️</button>
@@ -1199,8 +1198,9 @@
             document.getElementById('modalCustomerName').textContent = `👤 ${customer.name}`;
             const content = document.getElementById('customerDetailContent');
 
-            let invoicesHtml = customer.invoices.length > 0 ?
-                customer.invoices.map(inv => `
+            const invoices = customer.invoices || [];
+            let invoicesHtml = invoices.length > 0 ?
+                invoices.map(inv => `
                     <div class="invoice-item">
                         <div class="invoice-header">📋 فاکتووری ${inv.id}</div>
                         <div style="font-size: 0.9rem; margin-bottom: 4px;">📅 ${inv.date}</div>
@@ -1245,7 +1245,7 @@
                 <div class="inventory-item">
                     <div class="item-info">
                         <div class="product-image" style="width:40px;height:40px;font-size:1.8rem;display:flex;align-items:center;justify-content:center;border-radius:8px;overflow:hidden;">
-                            ${p.image ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">` : p.icon}
+                            ${p.image ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">` : (p.icon || '📦')}
                         </div>
                         <div>
                             <div><strong>${p.name}</strong></div>
@@ -1336,6 +1336,8 @@
         function deleteProduct(id) {
             if (!confirm('دڵنیای لە سڕینەوەی ئەم کاڵایە؟')) return;
             products = products.filter(p => p.id !== id);
+            // Also remove from selected products if any
+            selectedProducts = selectedProducts.filter(item => item.productId !== id);
             saveData(STORAGE_KEYS.products, products);
             renderInventory();
             renderProducts();
@@ -1347,10 +1349,14 @@
         function renderPurchaseProducts(filter = '') {
             const container = document.getElementById('purchaseProductList');
             const filtered = products.filter(p => p.name.includes(filter));
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:20px;">هیچ کاڵایەک نییە بۆ کڕین</p>';
+                return;
+            }
             container.innerHTML = filtered.map(p => `
                 <div class="product-item ${selectedPurchaseProduct === p.id ? 'selected' : ''}" onclick="selectPurchaseProduct(${p.id})">
                     <div class="product-image">
-                        ${p.image ? `<img src="${p.image}" alt="${p.name}">` : p.icon}
+                        ${p.image ? `<img src="${p.image}" alt="${p.name}">` : (p.icon || '📦')}
                     </div>
                     <div class="product-name">${p.name}</div>
                     <div class="product-price">${p.price.toLocaleString()} دینار</div>
@@ -1376,9 +1382,13 @@
                 return;
             }
             const product = products.find(p => p.id === selectedPurchaseProduct);
+            if (!product) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">کاڵا نەدۆزرایەوە</p>';
+                return;
+            }
             container.innerHTML = `
                 <div class="card">
-                    <strong>${product.icon} ${product.name}</strong>
+                    <strong>${product.icon || '📦'} ${product.name}</strong>
                     <div style="margin-top: 8px;">
                         <label>بڕی کڕین:</label>
                         <div class="quantity-control">
@@ -1419,6 +1429,10 @@
                 return;
             }
             const product = products.find(p => p.id === selectedPurchaseProduct);
+            if (!product) {
+                alert('کاڵا نەدۆزرایەوە!');
+                return;
+            }
             const purchase = {
                 id: Date.now(),
                 productId: product.id,
@@ -1604,18 +1618,15 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     
-                    // Validate data structure
                     if (!data.customers || !data.products || !data.purchases || !data.settlements) {
                         alert('فایلی باکەپ دروست نییە! تکایە فایلی دروست هەڵبژێرە.');
                         return;
                     }
 
-                    // Confirm restore
                     if (!confirm('ئەمە هەموو داتاکانی ئێستا دەسنووسێت! دڵنیای لە گەڕاندنەوەی باکەپ؟')) {
                         return;
                     }
 
-                    // Restore data
                     customers = data.customers;
                     products = data.products;
                     purchases = data.purchases;
@@ -1626,7 +1637,6 @@
                     saveData(STORAGE_KEYS.purchases, purchases);
                     saveData(STORAGE_KEYS.settlements, settlements);
 
-                    // Reset UI state
                     selectedCustomerId = null;
                     selectedProducts = [];
                     selectedPurchaseProduct = null;
@@ -1637,7 +1647,6 @@
                     document.getElementById('productSearch').value = '';
                     document.getElementById('purchaseSearch').value = '';
 
-                    // Re-render everything
                     renderProducts();
                     renderCustomers();
                     renderPurchaseProducts();
@@ -1652,7 +1661,6 @@
                 }
             };
             reader.readAsText(file);
-            // Reset the input so the same file can be selected again
             event.target.value = '';
         }
 
